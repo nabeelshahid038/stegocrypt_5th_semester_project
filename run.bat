@@ -1,44 +1,27 @@
 @echo off
-REM ─────────────────────────────────────────────────────────
-REM  StegoCrypt — Run Script (Windows)
-REM ─────────────────────────────────────────────────────────
-
-echo.
-echo  ███████╗████████╗███████╗ ██████╗  ██████╗
-echo  ██╔════╝╚══██╔══╝██╔════╝██╔════╝ ██╔═══██╗
-echo  ███████╗   ██║   █████╗  ██║  ███╗██║   ██║
-echo  ╚════██║   ██║   ██╔══╝  ██║   ██║██║   ██║
-echo  ███████║   ██║   ███████╗╚██████╔╝╚██████╔╝
-echo  ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝  ╚═════╝
-echo         Secure Image Steganography with AES
+title StegoCrypt Pro - Launcher
+echo ===================================================
+echo             StegoCrypt Pro Launcher
+echo   Secure Secret Vault Steganography & Detection
+echo ===================================================
 echo.
 
-REM Check if virtual environment exists
-IF EXIST "venv\Scripts\activate.bat" (
-    echo [INFO] Activating virtual environment...
-    call venv\Scripts\activate.bat
-) ELSE (
-    echo [INFO] No virtual environment found. Using system Python.
-    echo [TIP]  To create one: python -m venv venv
-    echo.
-)
+cd /d "%~dp0"
 
-REM Check Python version
+echo [1/2] Checking Python environment...
 python --version >nul 2>&1
-IF ERRORLEVEL 1 (
-    echo [ERROR] Python is not installed or not in PATH.
+if errorlevel 1 (
+    echo [ERROR] Python is not installed or not in PATH!
     pause
     exit /b 1
 )
 
-REM Install / check dependencies
-echo [INFO] Checking dependencies...
-pip install -r requirements.txt -q
+echo [2/2] Launching StegoCrypt Pro Dashboard...
+python -m streamlit run app.py --server.port 8501 --server.headless false
 
-echo.
-echo [INFO] Starting StegoCrypt...
-echo [INFO] Open your browser at: http://localhost:8501
-echo [INFO] Press Ctrl+C to stop the server.
-echo.
-
-streamlit run app.py --server.port 8501 --server.headless false
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Application failed to start.
+    pause
+    exit /b 1
+)

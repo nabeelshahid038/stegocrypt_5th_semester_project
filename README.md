@@ -1,413 +1,286 @@
-# StegoCrypt
+# StegoCrypt Pro
+## Secure Secret Vault Steganography & Forensic Hidden-Data Detection
 
-> **Secure Image Steganography with AES-256-GCM Encryption**
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Cryptography](https://img.shields.io/badge/AES--256--GCM-scrypt-green.svg)](https://cryptography.io/)
+[![Steganography](https://img.shields.io/badge/LSB-Vectorized%20NumPy-orange.svg)](https://numpy.org/)
+[![Steganalysis](https://img.shields.io/badge/Chi--Square%20PoV-Shannon%20Entropy-purple.svg)](https://scipy.org/)
+[![Status](https://img.shields.io/badge/Tests-49%20Passed-brightgreen.svg)]()
 
-StegoCrypt is a password-protected image steganography application that encrypts secret text messages using AES-256-GCM and hides the encrypted payload inside a PNG image using LSB (Least Significant Bit) steganography. The authorized receiver can extract and decrypt the original message using the correct password.
+**StegoCrypt Pro** is a cryptographic security and forensic image analysis suite. It allows users to package confidential text messages and multiple arbitrary binary files (PDFs, images, documents, archives) into an in-memory compressed, AES-256-GCM encrypted **Secret Vault**, and seamlessly conceal it within ordinary images using Least Significant Bit (LSB) steganography.
 
----
-
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Problem Statement](#problem-statement)
-- [Objectives](#objectives)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Encryption Workflow](#encryption-workflow)
-- [Steganography Workflow](#steganography-workflow)
-- [Decryption Workflow](#decryption-workflow)
-- [Installation](#installation)
-- [How to Run](#how-to-run)
-- [Usage Guide](#usage-guide)
-- [Why PNG?](#why-png)
-- [AES-GCM Explained](#aes-gcm-explained)
-- [LSB Explained](#lsb-explained)
-- [PSNR Explained](#psnr-explained)
-- [SSIM Explained](#ssim-explained)
-- [Security Considerations](#security-considerations)
-- [Limitations](#limitations)
-- [Future Improvements](#future-improvements)
+In addition, StegoCrypt Pro includes a **Forensic Steganalysis Engine** that inspects unknown images for exact StegoCrypt cryptographic signatures and performs generic statistical steganalysis (Pairs-of-Values Chi-Square test, Shannon entropy, bit balance analysis, and interactive bit-plane visualization) without relying on black-box machine learning or faked confidence metrics.
 
 ---
 
-## Project Overview
-
-StegoCrypt combines two complementary security techniques:
-
-| Technique | Purpose |
-|-----------|---------|
-| **Steganography** | Hides the *existence* of the message inside an image |
-| **Encryption** | Protects the *content* of the message with AES-256-GCM |
-
-Even if an observer detects there is a hidden payload (by performing steganalysis), they cannot read the plaintext without the correct password — the ciphertext is protected by AES-256-GCM with a scrypt-derived key.
-
----
-
-## Problem Statement
-
-Transmitting sensitive information over digital channels poses two distinct risks:
-
-1. **Interception** — an eavesdropper reads the message content.
-2. **Detection** — an observer notices that a secret communication exists at all.
-
-Standard encryption solves (1) but not (2). StegoCrypt addresses both by hiding encrypted data inside ordinary-looking images.
+## 📑 Table of Contents
+1. [Project Overview](#project-overview)
+2. [Problem Statement & Objectives](#problem-statement--objectives)
+3. [Architecture & Workflow](#architecture--workflow)
+4. [Secret Vault Architecture](#secret-vault-architecture)
+5. [Cryptographic Design (AES-256-GCM + scrypt)](#cryptographic-design)
+6. [Spatial LSB Steganography](#spatial-lsb-steganography)
+7. [Structured Binary Payload (STGC v2)](#structured-binary-payload-stgc-v2)
+8. [Forensic Hidden-Data Detection Engine](#forensic-hidden-data-detection-engine)
+   - [Level 1: Exact Signature Verification](#level-1-exact-signature-verification)
+   - [Level 2: Pairs-of-Values (PoVs) Chi-Square Analysis](#level-2-pairs-of-values-povs-chi-square-analysis)
+   - [Level 3: Multi-Channel Shannon Entropy](#level-3-multi-channel-shannon-entropy)
+   - [Visual Bit-Plane Inspector (Planes 0 to 7)](#visual-bit-plane-inspector)
+9. [Fidelity & Quality Metrics (PSNR & SSIM)](#fidelity--quality-metrics-psnr--ssim)
+10. [Security & Path-Traversal Protection](#security--path-traversal-protection)
+11. [Installation & Quickstart](#installation--quickstart)
+12. [Running the Test Suite](#running-the-test-suite)
+13. [Limitations & Forensic Disclaimers](#limitations--forensic-disclaimers)
+14. [Future Work](#future-work)
 
 ---
 
-## Objectives
+## 1. Project Overview
 
-- Implement AES-256-GCM encryption with scrypt password-based key derivation.
-- Implement LSB (Least Significant Bit) image steganography.
-- Combine both techniques into a seamless, user-friendly desktop application.
-- Provide image quality metrics (PSNR, SSIM) to verify minimal visual distortion.
-- Support Unicode messages (English, Urdu, Arabic, emoji, etc.).
-
----
-
-## Features
-
-- **AES-256-GCM Encryption** with authenticated encryption (confidentiality + integrity).
-- **scrypt Key Derivation** — password is never used directly as the AES key.
-- **LSB Steganography** — modifies only the least significant bit of RGB channels.
-- **Structured Binary Payload** with magic header, version, salt, nonce, and length metadata.
-- **Capacity Validation** — prevents overflow with a clear error message.
-- **PSNR & SSIM Metrics** — measures image quality degradation (typically negligible).
-- **Unicode Support** — secret messages can be in any UTF-8 language or contain emoji.
-- **Streamlit UI** — clean, professional dark-themed two-tab interface.
-- **In-memory Processing** — no plaintext or passwords are written to disk.
+StegoCrypt Pro addresses the dual challenge of secure covert communication and digital image forensics:
+1. **Creation & Concealment:** Securely aggregate heterogeneous data (text + multiple files) into an encrypted container hidden in pixel color channels.
+2. **Extraction & Verification:** Authenticate and restore the vault bit-for-bit with SHA-256 integrity validation.
+3. **Forensic Detection:** Inspect suspicious images using scientific, deterministic statistical methods to determine whether covert data is present.
 
 ---
 
-## Architecture
+## 2. Problem Statement & Objectives
+
+- **The Problem with Raw Encryption:** Standard ciphertext stands out in network traffic or on disk, signaling to censors or adversaries that valuable secrets exist.
+- **The Problem with Naive Steganography:** Hiding plaintext directly inside images is insecure against extraction attacks, and delimiter markers (e.g., `###END###`) cause parsing bugs or false positives.
+- **The Problem with Black-Box "AI" Steganalysis:** Machine learning detectors often hallucinate false positives, overfit on training datasets, and provide no mathematical transparency.
+- **The Solution:** Combine authenticated AES-256-GCM encryption, scrypt KDF, delimiter-free structured binary packaging, and mathematically grounded steganalysis (Chi-Square PoVs and Shannon entropy).
+
+---
+
+## 3. Architecture & Workflow
 
 ```
-Secret Text
-    │
-    ▼
-AES-256-GCM  ◄── scrypt(password + salt) → 256-bit key
-    │
-    ▼
-Encrypted Payload (STGC binary format)
-    │
-    ▼
-LSB Embedding (modify RGB channel LSBs)
-    │
-    ▼
-Stego PNG
+CREATE SECRET VAULT:
+Secret Text + Files (PDF, PNG, TXT, DOCX, ZIP)
+        ↓
+In-Memory ZIP Package (with metadata.json)
+        ↓
+DEFLATE Level 9 Compression
+        ↓
+Key Derivation: scrypt(Password, Salt, N=16384, r=8, p=1)
+        ↓
+AES-256-GCM Authenticated Encryption (+ 16-byte Auth Tag)
+        ↓
+Structured Binary Payload (b'STGC' + v02 + Flags + Salt + Nonce + Length uint64)
+        ↓
+Vectorized LSB Substitution (RGB channels only; Alpha preserved)
+        ↓
+Lossless PNG Output (stegocrypt_vault.png)
 
+OPEN SECRET VAULT:
+Stego PNG Image
+        ↓
+Read STGC Header (Signature & Bitstream Length)
+        ↓
+Extract Exact Ciphertext Bits
+        ↓
+Key Derivation via scrypt(Password, Extracted Salt)
+        ↓
+AES-256-GCM Authenticated Decryption
+        ↓
+In-Memory Decompression & Path-Traversal Sanitization
+        ↓
+Recover Original Text & Files (with SHA-256 Verification)
 
-Stego PNG
-    │
-    ▼
-LSB Extraction (read RGB channel LSBs)
-    │
-    ▼
-Encrypted Payload
-    │
-    ▼
-AES-256-GCM  ◄── scrypt(password + salt from payload) → key
-    │
-    ▼
-Secret Text
+DETECT HIDDEN DATA:
+Unknown Image (PNG, BMP, JPEG)
+        ↓
+Level 1: StegoCrypt Signature Verification (STGC Header)
+        ↓
+Level 2: Pairs-of-Values (PoVs) Chi-Square Attack
+        ↓
+Level 3: Multi-Channel & LSB-Plane Shannon Entropy
+        ↓
+Level 4: LSB Zero/One Distribution & Balance Deviation
+        ↓
+Transparent Heuristic Suspicion Score (0 - 100)
+        ↓
+Verdict: Category A / Category B / Category C
 ```
 
 ---
 
-## Encryption Workflow
+## 4. Secret Vault Architecture
 
+StegoCrypt Pro bundles secrets into a self-contained in-memory archive:
 ```
-Secret Message (UTF-8 text)
-         │
-         ▼
-    Validate input
-         │
-         ▼
-    Generate random 16-byte salt
-    Generate random 12-byte nonce
-         │
-         ▼
-    scrypt(password, salt) → 256-bit AES key
-         │
-         ▼
-    AES-256-GCM encrypt(key, nonce, plaintext)
-         │
-         ▼
-    Build STGC binary payload:
-      [STGC][v1][salt][nonce][length][ciphertext]
-         │
-         ▼
-    Payload bytes
+Vault
+├── metadata.json       # Creation timestamp, version, file records, SHA-256 hashes
+├── message.txt         # Secret text message (if provided)
+└── files/
+    ├── report.pdf      # Attached binary files
+    ├── photo.png
+    └── notes.txt
 ```
-
-### STGC Binary Payload Format
-
-| Field | Size | Description |
-|-------|------|-------------|
-| Magic | 4 bytes | `STGC` ASCII header |
-| Version | 1 byte | `0x01` |
-| Salt | 16 bytes | Random scrypt salt |
-| Nonce | 12 bytes | Random AES-GCM nonce |
-| Length | 4 bytes | Ciphertext length (big-endian uint32) |
-| Ciphertext | N bytes | AES-GCM ciphertext + 16-byte auth tag |
+- **In-Memory Only:** Utilizes `io.BytesIO` and `zipfile.ZipFile(compression=zipfile.ZIP_DEFLATED, compresslevel=9)`.
+- **Zero Plaintext Disk Writes:** Unlocked files and archives are generated directly in memory buffers.
 
 ---
 
-## Steganography Workflow
+## 5. Cryptographic Design
 
-```
-Cover Image (PNG/BMP/JPEG)
-         │
-         ▼
-    Convert to RGB/RGBA array
-         │
-         ▼
-    Check capacity: width × height × 3 ÷ 8 bytes
-         │
-         ▼
-    Convert payload bytes → bit array
-         │
-         ▼
-    For each payload bit:
-      channel_byte = (channel_byte & 0xFE) | payload_bit
-         │
-         ▼
-    Reconstruct image
-         │
-         ▼
-    Save as PNG (lossless)
-```
-
-Only the R, G, B channels are modified. The alpha channel (if present) is left intact.
+- **Cipher:** AES-256 in Galois/Counter Mode (GCM).
+- **Key Derivation Function (KDF):** `scrypt` with parameters:
+  - $N = 16,384$ ($2^{14}$ CPU/memory cost)
+  - $r = 8$ (block size factor)
+  - $p = 1$ (parallelization)
+  - Derived Key Length = 32 bytes (256 bits)
+- **Random Salt:** 16 bytes generated cryptographically (`os.urandom(16)`).
+- **Nonce:** 12 bytes generated cryptographically (`os.urandom(12)`).
+- **Password Normalization:** Unicode NFKC normalization prior to UTF-8 encoding.
+- **Authentication:** AES-GCM 16-byte authentication tag guarantees confidentiality and integrity. If an incorrect password or modified image byte is supplied, decryption fails cleanly with `InvalidTag` and displays:
+  > *"Unable to unlock vault. Incorrect password or corrupted data."*
 
 ---
 
-## Decryption Workflow
+## 6. Spatial LSB Steganography
 
-```
-Stego PNG
-         │
-         ▼
-    Read RGB channel LSBs
-         │
-         ▼
-    Read fixed-size header (37 bytes)
-         │
-         ▼
-    Validate magic header b'STGC'
-    Extract: salt, nonce, ciphertext length
-         │
-         ▼
-    Read exactly ciphertext_length bytes
-         │
-         ▼
-    scrypt(password, salt) → 256-bit key
-         │
-         ▼
-    AES-256-GCM decrypt(key, nonce, ciphertext)
-    (fails cleanly if wrong password or corrupted data)
-         │
-         ▼
-    Decode UTF-8 → Secret Text
-```
+- **Channel Isolation:** Only Red, Green, and Blue channels are used. Alpha transparency channels (in RGBA images) are left untouched to avoid transparency distortions.
+- **Substitution Formula:**
+  $$\text{Pixel}_{\text{new}} = (\text{Pixel}_{\text{old}} \ \& \ \text{0xFE}) \ | \ \text{SecretBit}$$
+- **Vectorized Embedding:** Executed via NumPy bitwise SIMD operations for instantaneous processing across multi-megapixel images.
+- **Format Guarantee:** Cover images may be uploaded as PNG, BMP, or JPEG (converted to RGB/RGBA internally). Stego output is **always exported as lossless PNG** because lossy compression (such as JPEG's Discrete Cosine Transform quantization) alters pixel values and corrupts LSB bitstreams.
 
 ---
 
-## Installation
+## 7. Structured Binary Payload (STGC v2)
 
-### Requirements
+StegoCrypt Pro rejects delimiter strings (e.g., `###END###`) because encrypted ciphertext is arbitrary binary data that can naturally contain any sequence of bytes. Instead, a strict, length-prefixed header is used:
 
-- Python 3.11 or newer
-- pip
+### Header Layout (Version 2 — 42 bytes fixed):
+| Offset | Field | Size | Data Type | Purpose |
+|---|---|---|---|---|
+| `0..3` | Magic Header | 4 bytes | `b'STGC'` | Exact StegoCrypt signature |
+| `4` | Version | 1 byte | `0x02` | Format version identifier |
+| `5` | Flags | 1 byte | `uint8` bitmask | Bit 0: Compressed, Bit 1: Vault, Bit 2: Files, Bit 3: Text |
+| `6..21` | Salt | 16 bytes | raw bytes | scrypt key derivation salt |
+| `22..33`| Nonce | 12 bytes | raw bytes | AES-GCM nonce |
+| `34..41`| Ciphertext Length | 8 bytes | `uint64` (big-endian `>Q`) | Exact payload byte count |
+| `42..N` | Ciphertext | Variable | raw bytes | Encrypted vault archive + 16-byte GCM auth tag |
 
-### Steps
+*Note: StegoCrypt Pro includes backward compatibility to read Version 1 (37-byte legacy headers with uint32 lengths).*
 
+---
+
+## 8. Forensic Hidden-Data Detection Engine
+
+The forensic module inspects images without relying on opaque machine learning:
+
+### Level 1: Exact Signature Verification
+- Evaluates the initial 32 bits of the image's RGB LSB bitstream for `b'STGC'`.
+- If present and valid, parses the header and issues:
+  - **Verdict:** `Category A: CONFIRMED STEGOCRYPT PAYLOAD`
+  - **Suspicion Score:** `100 / 100`
+  - **Metadata:** Format version, vault flag, compression flag, file count flag, and exact embedded ciphertext size.
+
+### Level 2: Pairs-of-Values (PoVs) Chi-Square Analysis
+- Based on the seminal research by **Westfeld & Pfitzmann (1999)**.
+- Spatial LSB replacement swaps values between adjacent pairs of values $(2k, 2k+1)$.
+- As embedding increases, the observed counts of $2k$ and $2k+1$ equalize toward their average $E_k = \frac{h(2k) + h(2k+1)}{2}$.
+- Chi-square statistic:
+  $$\chi^2 = \sum_{k=0}^{127} \frac{(h(2k) - h(2k+1))^2}{2 E_k}$$
+- Under the null hypothesis of equalized pairs (LSB steganography present), $\chi^2$ drops and the $p$-value approaches $1.0$.
+
+### Level 3: Multi-Channel Shannon Entropy
+- Measures informational disorder across each RGB channel and isolated LSB planes:
+  $$H = -\sum_{i} p_i \log_2(p_i)$$
+- In natural images, LSB planes exhibit correlations with surrounding textures ($H_{LSB} \approx 0.95 - 0.99$).
+- Encrypted binary data acts as a uniform Bernoulli process with $p \approx 0.5$, producing $H_{LSB} \approx 1.0000$ bits/pixel.
+
+### Visual Bit-Plane Inspector
+- Renders individual bit planes ($0$ to $7$) for Red, Green, and Blue channels as black-and-white visual maps.
+- Allows visual inspection of high-frequency noise patterns in Bit Plane 0 (LSB).
+
+### Forensic Verdict Categories:
+- **Category A:** `CONFIRMED STEGOCRYPT PAYLOAD` (Signature confirmed).
+- **Category B:** `SUSPICIOUS — POSSIBLE HIDDEN DATA` (Suspicion score $\ge 60$ based on statistical anomalies).
+- **Category C:** `NO STRONG EVIDENCE FOUND` (Suspicion score $< 60$).
+
+---
+
+## 9. Fidelity & Quality Metrics
+
+- **Peak Signal-to-Noise Ratio (PSNR):**
+  $$MSE = \frac{1}{3 W H} \sum_{x,y,c} (I_{\text{orig}}(x,y,c) - I_{\text{stego}}(x,y,c))^2$$
+  $$PSNR = 10 \cdot \log_{10}\left(\frac{255^2}{MSE}\right)$$
+  Typical StegoCrypt Pro outputs yield **$55 - 65$ dB**, indicating imperceptible differences.
+- **Structural Similarity Index (SSIM):**
+  $$SSIM(x,y) = \frac{(2\mu_x\mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$$
+  Typical outputs yield **$\ge 0.9999$**.
+- **Amplified Difference Map:** Computes $|I_{\text{orig}} - I_{\text{stego}}| \times 50$, highlighting modified pixels.
+
+---
+
+## 10. Security & Path-Traversal Protection
+
+- **ZIP Path Traversal Prevention:** Any filename containing `../`, `..\`, absolute root slashes, or Windows drive paths (e.g. `../../evil.exe`) is strictly sanitized using `os.path.basename` and regex scrubbing.
+- **SHA-256 Hash Integrity:** Pre-embedding and post-extraction hashes are computed and verified to guarantee zero byte corruption.
+- **Memory Safety:** Decryption and extraction operate strictly in volatile memory.
+
+---
+
+## 11. Installation & Quickstart
+
+### Prerequisites
+- Python 3.11 or higher
+- Windows, macOS, or Linux
+
+### Installation
 ```bash
-# Clone or download the project
+# Clone or navigate to the repository
 cd stegocrypt
 
-# (Optional but recommended) Create virtual environment
-python -m venv venv
-venv\Scripts\activate   # Windows
-# source venv/bin/activate  # Linux/macOS
-
 # Install dependencies
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+```
+
+### Running the Application
+**On Windows:**
+Double-click `run.bat` or run:
+```powershell
+python -m streamlit run app.py
 ```
 
 ---
 
-## How to Run
+## 12. Running the Test Suite
 
-### Windows (easiest)
-
-```
-Double-click run.bat
-```
-
-Or from the terminal:
-
-```bash
-streamlit run app.py
+Execute the comprehensive test suite (49 automated unit and end-to-end integration tests):
+```powershell
+python -m pytest tests -v
 ```
 
-Then open [http://localhost:8501](http://localhost:8501) in your browser.
-
-### Run Tests
-
-```bash
-pytest tests/ -v
-```
-
----
-
-## Usage Guide
-
-### Encrypt & Hide
-
-1. Upload a **cover image** (PNG, BMP, or JPEG).
-2. Type your **secret message** (any language, emoji supported).
-3. Enter and confirm a **password** (minimum 8 characters; 12+ recommended).
-4. Click **Encrypt & Hide in Image**.
-5. Review PSNR/SSIM metrics and visual comparison.
-6. Click **Download stegocrypt_output.png** to save the stego image.
-
-### Extract & Decrypt
-
-1. Upload the **stego PNG** file.
-2. Enter the **same password** used during encryption.
-3. Click **Extract & Decrypt Message**.
-4. Read the recovered secret message.
+All tests verify:
+- In-memory ZIP packaging and extraction
+- Directory traversal attack mitigation
+- Unicode (English, Urdu, Arabic, Sindhi, Emoji) preservation
+- scrypt key derivation and AES-256-GCM encryption/decryption
+- Wrong-password rejection
+- STGC v2 payload packing and v1 legacy backwards compatibility
+- Vectorized LSB embedding and RGBA alpha preservation
+- Chi-Square PoV and Shannon Entropy calculations
+- End-to-End Master Demo (Section 68 of specification)
 
 ---
 
-## Why PNG?
+## 13. Limitations & Forensic Disclaimers
 
-JPEG uses *lossy compression* that permanently alters pixel values by large amounts — this destroys LSB-encoded data. PNG uses *lossless compression* that preserves every pixel value exactly. BMP is also lossless.
-
-> **Rule:** Always share stego images as PNG. Never re-save them as JPEG.
-
----
-
-## AES-GCM Explained
-
-**AES-256-GCM** (Advanced Encryption Standard, Galois/Counter Mode) is a symmetric authenticated encryption scheme.
-
-- **AES-256** — a 256-bit key provides 2²⁵⁶ possible keys; computationally infeasible to brute-force.
-- **GCM (Galois/Counter Mode)** — provides both *confidentiality* (the message is unreadable without the key) and *integrity/authentication* (any tampering with the ciphertext causes decryption to fail).
-- **scrypt Key Derivation** — the user's password is never used directly. Instead, scrypt derives a 256-bit key from the password and a random salt, making brute-force dictionary attacks expensive.
-- **Random nonce** — a fresh 12-byte nonce is generated for every encryption, ensuring that encrypting the same message twice with the same password produces different ciphertext.
+1. **Format Specificity:** StegoCrypt payloads can be reliably identified by their cryptographic header. However, unknown or custom third-party steganography cannot be universally detected.
+2. **Statistical Steganalysis Constraints:** Generic statistical steganalysis produces evidence, not guaranteed proof. Natural camera noise, image editing, sharpening filters, or synthetic rendering may trigger false positives or false negatives.
+3. **Lossy Compression Vulnerability:** Converting a stego image to JPEG, WebP, or sending it via platforms that compress images (e.g., standard WhatsApp, Discord) will destroy LSB payload data. Stego images must be transmitted losslessly as PNG.
 
 ---
 
-## LSB Explained
+## 14. Future Work
 
-**LSB (Least Significant Bit) Steganography** hides data by replacing the lowest-order bit of each colour channel byte:
-
-```
-Original pixel channel byte:  1 1 0 1 0 1 1 0  (= 214)
-                                               ↑
-                                        LSB position
-
-Secret bit to hide: 1
-
-Modified byte:                1 1 0 1 0 1 1 1  (= 215)
-```
-
-The change from 214 to 215 is invisible to the human eye. Three RGB channels per pixel → 3 bits per pixel → `width × height × 3 / 8` bytes of capacity.
-
----
-
-## PSNR Explained
-
-**PSNR (Peak Signal-to-Noise Ratio)** measures the ratio of maximum possible signal power to noise power (distortion):
-
-```
-PSNR = 10 · log₁₀(MAX² / MSE)
-```
-
-where MAX = 255 (for 8-bit images) and MSE is the mean squared error between original and stego images.
-
-- Higher PSNR → less distortion.
-- Typical LSB steganography produces PSNR > 50 dB, which is negligible visually.
-
-> ⚠️ Note: High PSNR and SSIM values *typically* indicate very small visual differences, but no single threshold guarantees perfect imperceptibility.
-
----
-
-## SSIM Explained
-
-**SSIM (Structural Similarity Index)** measures perceived image quality by comparing luminance, contrast, and structure between two images. Values range from -1 to 1; values close to 1 indicate very high similarity.
-
-LSB steganography typically achieves SSIM ≥ 0.999, meaning the images are perceptually nearly identical.
-
----
-
-## Security Considerations
-
-| Consideration | StegoCrypt Approach |
-|---------------|---------------------|
-| Password storage | Never stored — exists only in memory during processing |
-| Plaintext storage | Never written to disk — processed in memory |
-| Key derivation | scrypt with random 16-byte salt (resistant to rainbow tables) |
-| Nonce reuse | Fresh random 12-byte nonce per encryption — no reuse |
-| Authentication | AES-GCM auth tag detects tampering or wrong password |
-| Payload detection | Magic header `STGC` allows clean error on non-stego images |
-
-**Security model:**
-- **Steganography** hides the *existence* of the message.
-- **Encryption** protects the *content* of the message.
-- An attacker who extracts the payload cannot read the plaintext without the password (AES-256-GCM provides 256-bit security).
-
----
-
-## Limitations
-
-| Limitation | Details |
-|------------|---------|
-| Lossy compression destroys payload | Do not re-save the stego image as JPEG |
-| Resizing destroys payload | Any image resize operation will corrupt embedded data |
-| Editing destroys payload | Filters, colour adjustments, and cropping will corrupt data |
-| Text only | This version hides UTF-8 text only, not binary files |
-| Password loss | If the password is forgotten, the message cannot be recovered |
-| Large payload requires large image | A 1 MP image holds ~375 KB; plan image size accordingly |
-| No error correction | Bit errors cannot be corrected; payload is all-or-nothing |
-
----
-
-## Future Improvements
-
-The following features are not implemented in this version but could be added in future:
-
-- **DCT-based steganography** — embeds in the frequency domain (more robust to JPEG compression).
-- **Randomized embedding positions** — uses a PRNG seeded from the key to scatter bits pseudo-randomly.
-- **Error-correcting codes (ECC)** — adds redundancy to recover from minor bit errors.
-- **Binary file hiding** — support hiding any file type, not just text.
-- **Multi-image payload splitting** — split a large payload across multiple carrier images.
-- **Desktop executable** — package with PyInstaller for a standalone `.exe`.
-- **Mobile app** — Kivy or React Native frontend with a Python backend.
-- **Zstandard compression** — compress the plaintext before encryption to increase effective capacity.
-
----
-
-## Project Structure
-
-```
-stegocrypt/
-├── app.py              ← Streamlit UI entry point
-├── crypto_utils.py     ← AES-256-GCM encryption / decryption
-├── steganography.py    ← LSB embed / extract
-├── metrics.py          ← PSNR, SSIM, difference visualization
-├── validators.py       ← Image upload validation
-├── conftest.py         ← pytest sys.path setup
-├── requirements.txt    ← Python dependencies
-├── README.md           ← This file
-├── run.bat             ← Windows launch script
-├── .gitignore
-└── tests/
-    ├── test_crypto.py          ← Crypto unit tests
-    └── test_steganography.py   ← Steganography unit tests
-```
-
----
-
-*Built with Python · Streamlit · Pillow · NumPy · cryptography · scikit-image*
+The following enhancements may be explored in future releases:
+- Frequency-domain steganography (Discrete Cosine Transform / Discrete Wavelet Transform) for lossy compression resilience.
+- Error-Correcting Codes (Reed-Solomon / LDPC) for noise tolerance.
+- Asymmetric public-key authentication (ECDSA / Ed25519) for signed vaults.
+- Mobile companion application and browser extension.

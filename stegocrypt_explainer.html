@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .section { border-left: 4px solid var(--primary); padding-left: 16px; margin: 20px 0; }
+    .analogy { background: #1e1b4b; border: 1px solid #4338ca; border-radius:10px; padding:14px; margin:10px 0; }
+    .formula-box { background: #0f172a; border: 1px solid #334155; border-radius:8px; padding:14px; font-family:monospace; font-size:13px; margin:10px 0; line-height:1.8; }
+    .highlight { background: #7c3aed; color:#fff; padding:2px 8px; border-radius:4px; font-weight:700; }
+    .highlight-green { background: #166534; color:#bbf7d0; padding:2px 8px; border-radius:4px; font-weight:700; }
+    .highlight-red { background: #7f1d1d; color:#fecaca; padding:2px 8px; border-radius:4px; font-weight:700; }
+    .highlight-blue { background: #1e3a5f; color:#bae6fd; padding:2px 8px; border-radius:4px; font-weight:700; }
+    .highlight-yellow { background: #713f12; color:#fef08a; padding:2px 8px; border-radius:4px; font-weight:700; }
+    .bit-visual { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:6px; font-weight:800; font-family:monospace; font-size:16px; margin:2px; }
+    .b0 { background:#1e293b; color:#64748b; border:1px solid #334155; }
+    .b1 { background:#312e81; color:#a5b4fc; border:1px solid #4338ca; }
+    .b-changed { background:#7c3aed; color:#fff; border:2px solid #c4b5fd; box-shadow:0 0 8px #a78bfa; }
+    .b-mask { background:#7f1d1d; color:#fca5a5; border:1px solid #dc2626; }
+    .step-num { width:28px; height:28px; border-radius:50%; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
+    .step-row { display:flex; gap:12px; align-items:flex-start; margin:12px 0; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin:10px 0; }
+    .vs-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+    .vs-bad { background:#2d0f0f; border:1px solid #dc2626; border-radius:8px; padding:12px; }
+    .vs-good { background:#052e16; border:1px solid #16a34a; border-radius:8px; padding:12px; }
+    .byte-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; margin:8px 0; }
+    .byte-label { font-size:11px; color:var(--muted-foreground); width:80px; flex-shrink:0; }
+    .pixel-box { width:40px; height:40px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+    nav { position:sticky; top:0; background:var(--background); z-index:10; padding:8px 0; border-bottom:1px solid var(--border); }
+    .nav-btn { padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--foreground); margin:2px; transition:all 0.2s; }
+    .nav-btn:hover, .nav-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .content-section { display:none; }
+    .content-section.active { display:block; }
+    h2 { font-size:1.4rem; font-weight:800; margin-bottom:6px; }
+    h3 { font-size:1.05rem; font-weight:700; margin:16px 0 8px; color:var(--foreground); }
+    p, li { color:var(--muted-foreground); font-size:14px; line-height:1.7; }
+    strong { color:var(--foreground); }
+    .emoji-big { font-size:2rem; }
+    .progress-bar { height:12px; border-radius:6px; background:#1e293b; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,#6366f1,#a78bfa); }
+    table { border-collapse:collapse; width:100%; font-size:13px; }
+    th { background:var(--card); padding:8px 12px; text-align:left; border:1px solid var(--border); color:var(--muted-foreground); font-weight:600; }
+    td { padding:8px 12px; border:1px solid var(--border); }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] p-4">
+
+<!-- NAVIGATION -->
+<nav class="mb-4">
+  <div style="display:flex;flex-wrap:wrap;gap:4px;">
+    <button class="nav-btn active" onclick="show('basics')">🧱 Basics</button>
+    <button class="nav-btn" onclick="show('password')">🔑 Password & Key</button>
+    <button class="nav-btn" onclick="show('scrypt')">⚗️ scrypt</button>
+    <button class="nav-btn" onclick="show('aes')">🔒 AES-256-GCM</button>
+    <button class="nav-btn" onclick="show('payload')">📦 Payload</button>
+    <button class="nav-btn" onclick="show('lsb')">🖼️ LSB</button>
+    <button class="nav-btn" onclick="show('capacity')">📐 Capacity</button>
+    <button class="nav-btn" onclick="show('psnr')">📊 PSNR</button>
+    <button class="nav-btn" onclick="show('ssim')">📈 SSIM</button>
+    <button class="nav-btn" onclick="show('full')">🔄 Full Flow</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ BASICS ═══════════════════════ -->
+<div id="sec-basics" class="content-section active">
+  <h2>🧱 Bilkul Basics — Sab Kuch Shuru Se</h2>
+  <p class="mb-4">Pehle ye samjho ke computer mein koi bhi cheez — text, image, password — sab <strong>numbers</strong> hain, aur wo numbers <strong>bits aur bytes</strong> mein store hotay hain.</p>
+
+  <div class="section">
+    <h3>Bit kya hota hai?</h3>
+    <p>Computer sirf <strong>0 aur 1</strong> samajhta hai. Ek <strong>bit = ek 0 ya 1</strong>.</p>
+    <div class="card mt-3">
+      <div class="flex gap-3 flex-wrap">
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+      </div>
+      <p class="mt-2 text-xs">↑ Ye 8 bits hain. In 8 bits ko milao = <strong>1 Byte</strong></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Byte kya hota hai?</h3>
+    <p><strong>8 bits = 1 Byte</strong>. Har character ya number ko bytes mein store karte hain.</p>
+    <div class="formula-box">
+1 Bit  = 0 ya 1
+8 Bits = 1 Byte
+1024 Bytes = 1 KB (Kilobyte)
+1024 KB    = 1 MB (Megabyte)
+    </div>
+    <div class="card">
+      <p><strong>Example:</strong> Letter "A" ka number hai <strong>65</strong>. 65 ko binary mein likho:</p>
+      <div class="byte-row mt-2">
+        <span class="byte-label">"A" = 65 =</span>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+      </div>
+      <p class="text-xs mt-1">0×128 + 1×64 + 0×32 + 0×16 + 0×8 + 0×4 + 0×2 + 1×1 = <strong>65</strong></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Image mein kya hota hai?</h3>
+    <p>Har image <strong>pixels</strong> se bani hoti hai. Har pixel ka 3 colours hain: <strong>Red, Green, Blue (RGB)</strong>. Har colour <strong>0 to 255</strong> ke beech ki value hai — matlab <strong>1 byte per colour</strong>.</p>
+    <div class="card">
+      <div class="flex gap-3 flex-wrap">
+        <div class="pixel-box" style="background:rgb(214,89,45); color:white;">R=214<br>G=89<br>B=45</div>
+        <div class="pixel-box" style="background:rgb(120,200,80); color:white;">R=120<br>G=200<br>B=80</div>
+        <div class="pixel-box" style="background:rgb(50,100,230); color:white;">R=50<br>G=100<br>B=230</div>
+        <div class="pixel-box" style="background:rgb(200,180,90); color:white;">R=200<br>G=180<br>B=90</div>
+      </div>
+      <p class="text-xs mt-2">Har pixel = 3 bytes (R+G+B). Ek 100×100 image = 10,000 pixels = 30,000 bytes.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Steganography kya hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">🎯 <strong>Real life analogy:</strong> Socho tumne ek chitthi mein har pehle word ko underline kiya — sirf tumhara dost jaanta hai ke pehle word padhne se secret message milta hai. Baaki log poori chitthi parh ke kuch nahi samjhenge.</p>
+    </div>
+    <p>Steganography = <strong>kisi cheez ke andar kuch chhupaana</strong> is tarah ke dekhne wale ko pata bhi na chale ke kuch chhupa hai.</p>
+    <div class="vs-grid">
+      <div class="vs-bad"><p class="text-sm font-bold text-red-300">❌ Sirf Encryption</p><p class="text-xs mt-1">Message encrypt hai lekin dushman ko pata hai ke SECRET MESSAGE hai — wo attack karega</p></div>
+      <div class="vs-good"><p class="text-sm font-bold text-green-300">✅ Stego + Encryption</p><p class="text-xs mt-1">Message image ke andar chhupa hai — dushman ko pata hi nahi ke koi message hai!</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Encryption kya hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">🔒 <strong>Real life analogy:</strong> Ek safe mein letter band karo. Safe kholne ke liye combination chahiye. Koi bhi safe dekh sakta hai, lekin andar nahi dekh sakta bina combination ke.</p>
+    </div>
+    <p>Encryption = <strong>text ko scramble karna</strong> ek key ke saath, taaki sirf sahi key wala parh sake.</p>
+    <div class="formula-box">
+Plain text: "Hello" 
+Encrypted:  "X7kP#mQ2!" (random-looking garbage)
+Decrypt with correct key → "Hello" ✅
+Decrypt with wrong key   → Error or garbage ❌
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PASSWORD & KEY ═══════════════════════ -->
+<div id="sec-password" class="content-section">
+  <h2>🔑 Password aur Key — Yahi Asal Raaz Hai</h2>
+
+  <div class="section">
+    <h3>Password aur Key mein farq kya hai?</h3>
+    <div class="vs-grid">
+      <div class="vs-bad">
+        <p class="text-sm font-bold text-red-300">Password</p>
+        <p class="text-xs mt-1">Jo tum yaad rakhte ho: "MyDog123!"<br>Koi bhi length ho sakti hai<br>Human readable</p>
+      </div>
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">Encryption Key</p>
+        <p class="text-xs mt-1">256 bits = 32 bytes = exactly fixed size<br>Random-looking numbers<br>AES ko exactly 256 bits chahiye</p>
+      </div>
+    </div>
+    <div class="analogy mt-3">
+      <p class="text-sm">🗝️ <strong>Analogy:</strong> Password ek passphrase hai — "open sesame". Key ek actual physical key hai — exactly 256-bit metal ka tukra. Hum passphrase ko ek machine (scrypt) mein daalte hain jo exact key banaati hai.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Password directly key kyun nahi?</h3>
+    <p><strong>"hello"</strong> = sirf 5 bytes = 40 bits. AES ko <strong>256 bits chahiye</strong>. Aur agar sab log "hello" use karein to attacker ek baar crack kare, sab ka data lega!</p>
+    <div class="formula-box">
+"hello" = h e l l o = 5 chars = 40 bits → NOT ENOUGH for AES-256
+
+Solution: scrypt converts "hello" + random salt 
+          → 256 bits of strong key
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Salt kya hota hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">🧂 <strong>Analogy:</strong> Do log same password "hello" use karein. Salt ek random number add karna hai — jaise "hello" + [random 16 bytes]. Dono ka alag-alag key banega. Attacker ko har account alag crack karna hoga!</p>
+    </div>
+    <div class="formula-box">
+User A: scrypt("hello" + salt_A) → Key = [8E 3C F1 ... ] (32 bytes)
+User B: scrypt("hello" + salt_B) → Key = [A2 7D 9B ... ] (32 bytes)
+
+Same password, different salt → COMPLETELY DIFFERENT keys!
+    </div>
+    <p>Salt <strong>random 16 bytes</strong> hoti hai — os.urandom(16) se generate hoti hai. Salt secret nahi hoti — ye payload ke saath store hoti hai. Lekin har encryption mein naya salt = har key alag.</p>
+  </div>
+
+  <div class="section">
+    <h3>Rainbow Table Attack kya hota hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">🌈 <strong>Analogy:</strong> Socho attacker ne pehle se 1 million common passwords ki keys bana li hain aur ek table mein save kar li hain. Ab wo bas table check karta hai — ye Rainbow Table hai. Salt ki wajah se ye table useless ho jaati hai kyunki har salt ke saath alag key banti hai!</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Password Strength — Simple Math</h3>
+    <div class="formula-box">
+Password "ab":   2 chars, only lowercase → 26² = 676 possibilities → WEAK
+Password "Ab1!": 4 chars, mixed → 95⁴ ≈ 81 million → Better
+Password "StrongPass123!": 14 chars, mixed → 95¹⁴ ≈ 10²⁷ → STRONG
+
+Time to crack (with scrypt slowing things down):
+Weak: seconds
+Fair: hours  
+Strong: billions of years → practically impossible
+    </div>
+    <p>StegoCrypt requires <strong>minimum 8 characters</strong>. We recommend 12+.</p>
+  </div>
+
+  <div class="section">
+    <h3>NFKC Normalization — Unicode wali baat</h3>
+    <p>Unicode mein ek hi letter alag-alag taraf likha ja sakta hai:</p>
+    <div class="formula-box">
+"é" — do tarike:
+  1. Single character: U+00E9  (NFC form)
+  2. Two characters:  U+0065 + U+0301  (NFD form = "e" + accent)
+
+Dono same dikhte hain, lekin computer ke liye alag bytes!
+
+NFKC Normalization: dono ko same bytes mein convert karo
+NFKC("é" as U+00E9)   → same output
+NFKC("é" as e+accent) → same output
+→ Same key banega! ✅
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SCRYPT ═══════════════════════ -->
+<div id="sec-scrypt" class="content-section">
+  <h2>⚗️ scrypt — Password Ko Key Mein Badalna</h2>
+
+  <div class="section">
+    <h3>scrypt kya karta hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">⚗️ <strong>Analogy:</strong> scrypt ek bahut mehenga, time-consuming factory hai. Tum apna password andar daalte ho, salt daalte ho — factory bahut saara kaam karti hai (RAM use karti hai, CPU use karti hai) aur output mein tumhe ek perfect 256-bit key milti hai. Ye deliberately slow hai — kyunki attacker bhi slow hoga!</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>scrypt ka formula:</h3>
+    <div class="formula-box">
+Key = scrypt(Password, Salt, N, r, p, dkLen)
+    </div>
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div><strong>Password</strong> — tumhara original password (NFKC normalized, UTF-8 encoded)</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div><strong>Salt</strong> — random 16 bytes. Har baar naya. Rainbow tables se bachata hai.</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div><strong>N = 2¹⁴ = 16,384</strong> — CPU/Memory cost. Iska matlab hai scrypt ko 16,384 baar ek operation karna hoga. Jitna bada N, utna zyada time aur RAM chahiye.</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">4</div>
+      <div><strong>r = 8</strong> — Block size parameter. RAM usage badhaata hai.</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">5</div>
+      <div><strong>p = 1</strong> — Parallelization. 1 matlab ek baar mein single thread.</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">6</div>
+      <div><strong>dkLen = 32</strong> — Output key length: 32 bytes = 256 bits = AES-256 ke liye perfect.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Memory Calculation:</h3>
+    <div class="formula-box">
+RAM used by scrypt = 128 × N × r bytes
+                   = 128 × 16,384 × 8
+                   = 16,777,216 bytes
+                   = 16 MB per attempt
+
+Attacker ke paas 10,000 computers hain aur sab brute-force karein:
+10,000 × 16 MB = 160 GB RAM sirf ek second ke guesses ke liye
+→ Practically impossible to brute-force! ✅
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Ye slow kyun hai? Deliberately!</h3>
+    <div class="vs-grid">
+      <div class="vs-bad">
+        <p class="text-sm font-bold text-red-300">MD5 Hash (old, fast)</p>
+        <p class="text-xs mt-1">Password hash = 1 microsecond<br>Attacker: 1 billion guesses/second<br>8-char password: cracked in minutes!</p>
+      </div>
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">scrypt (slow by design)</p>
+        <p class="text-xs mt-1">Password hash = ~100ms + 16MB RAM<br>Attacker: 10 guesses/second max<br>8-char password: billions of years!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>scrypt Internal Steps (simple version):</h3>
+    <div class="step-row"><div class="step-num">1</div><div><strong>PBKDF2 Setup:</strong> Password aur salt se initial blocks banao</div></div>
+    <div class="step-row"><div class="step-num">2</div><div><strong>ROMix:</strong> N baar memory mein random-access operations karo — ye RAM use karta hai, GPU/ASIC se speed nahi milti</div></div>
+    <div class="step-row"><div class="step-num">3</div><div><strong>BlockMix + Salsa20:</strong> Har block ko 64-byte chunks mein process karo</div></div>
+    <div class="step-row"><div class="step-num">4</div><div><strong>PBKDF2 Final:</strong> Output leke final key extract karo — exactly 32 bytes</div></div>
+    <p class="text-xs mt-3 text-[var(--muted-foreground)]">Tumhe ye andar ka kaam yaad nahi rakhna — bas ye yaad raho: <strong>scrypt = password + salt → 256-bit key, aur ye bahut secure hai</strong></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ AES-256-GCM ═══════════════════════ -->
+<div id="sec-aes" class="content-section">
+  <h2>🔒 AES-256-GCM — Encryption Algorithm</h2>
+
+  <div class="section">
+    <h3>AES kya hai? (Advanced Encryption Standard)</h3>
+    <div class="analogy">
+      <p class="text-sm">🏭 <strong>Analogy:</strong> AES ek bahut complicated meat grinder jaisi machine hai. Tum plaintext daalo + key daalo → encrypted garbage nikalta hai. Same machine mein encrypted garbage + same key daalo → original plaintext wapas milta hai.</p>
+    </div>
+    <div class="formula-box">
+AES = US Government approved encryption standard (since 2001)
+Used by: banks, military, WhatsApp, Signal, HTTPS, everywhere
+
+AES-128: 128-bit key (2¹²⁸ possible keys)
+AES-192: 192-bit key
+AES-256: 256-bit key (2²⁵⁶ possible keys) ← We use this
+
+2²⁵⁶ = 115,792,089,237,316,195,423,570,985,008,687,907,853,
+         269,984,665,640,564,039,457,584,007,913,129,639,936
+
+(Universe mein atoms ki tadaad se zyada!) 
+→ Brute force karna = IMPOSSIBLE
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>AES kaise kaam karta hai? (Block Cipher)</h3>
+    <p>AES ek baar mein <strong>16 bytes (128 bits)</strong> process karta hai — ise "block" kehte hain.</p>
+    <div class="step-row"><div class="step-num">1</div><div><strong>SubBytes:</strong> Har byte ko ek lookup table se replace karo (S-box)</div></div>
+    <div class="step-row"><div class="step-num">2</div><div><strong>ShiftRows:</strong> 4×4 grid ki rows ko shift karo</div></div>
+    <div class="step-row"><div class="step-num">3</div><div><strong>MixColumns:</strong> Columns mein mathematical mixing (Galois Field multiplication)</div></div>
+    <div class="step-row"><div class="step-num">4</div><div><strong>AddRoundKey:</strong> Key ke saath XOR karo</div></div>
+    <p class="text-xs mt-2">Ye 4 steps <strong>14 baar repeat</strong> hote hain (AES-256 mein 14 rounds). Itna zyada mixing ke baad koi pattern nahi bachta!</p>
+  </div>
+
+  <div class="section">
+    <h3>GCM kya hai? (Galois/Counter Mode)</h3>
+    <p>GCM ek "mode" hai jisme AES use karte hain. Ye <strong>do kaam ek saath</strong> karta hai:</p>
+    <div class="vs-grid">
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">1. Confidentiality (Privacy)</p>
+        <p class="text-xs mt-1">Message encrypt hota hai — koi padh nahi sakta bina key ke</p>
+      </div>
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">2. Authentication (Integrity)</p>
+        <p class="text-xs mt-1">Ek 16-byte "auth tag" banta hai — koi bhi bit change hone pe tag mismatch → automatic detection!</p>
+      </div>
+    </div>
+    <div class="analogy mt-3">
+      <p class="text-sm">🔏 <strong>Analogy:</strong> GCM ek sealed envelope jaisa hai jo andar se lock bhi hai aur bahar tamper-proof seal bhi hai. Agar koi needle se andar likh de ya seal toda — envelope khulega hi nahi!</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>GCM mein Counter Mode (CTR) encryption:</h3>
+    <div class="formula-box">
+Counter = Nonce (12 bytes) + Counter (4 bytes)
+
+Block 1: Encrypt(Key, Nonce || 0000001) → Keystream_1
+Block 2: Encrypt(Key, Nonce || 0000002) → Keystream_2
+...
+
+Ciphertext_1 = Plaintext_1 XOR Keystream_1
+Ciphertext_2 = Plaintext_2 XOR Keystream_2
+
+XOR matlab: 
+  1 XOR 1 = 0
+  1 XOR 0 = 1  
+  0 XOR 1 = 1
+  0 XOR 0 = 0
+(Ek baar XOR karo = encrypt, dobara same XOR karo = decrypt!)
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Nonce kya hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">🎲 <strong>Analogy:</strong> Nonce = "Number Used Once". Jaise har cheque par ek unique cheque number hota hai. Agar tum same cheque number dobara use karo — bank reject karta hai. Same tarah, same nonce dobara use = security completely breaks!</p>
+    </div>
+    <div class="formula-box">
+Nonce = os.urandom(12) → 12 random bytes = 96 bits
+
+Possible nonces = 2⁹⁶ = 79,228,162,514,264,337,593,543,950,336
+
+Agar tum har second ek encryption karo:
+Time to repeat = 2⁹⁶ seconds ≈ age of universe × 2 billion
+
+→ Practically impossible to repeat nonce! ✅
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Auth Tag — Integrity Check:</h3>
+    <div class="formula-box">
+GHASH function use karta hai:
+H = AES(Key, 0...0)   [128 zero bits encrypt karo]
+
+Tag = GHASH(H, Ciphertext) XOR AES(Key, Nonce || 1)
+
+Tag size = 16 bytes = 128 bits
+
+VERIFY karte waqt:
+  Recalculate tag from received ciphertext
+  IF received_tag == calculated_tag → OK ✅
+  IF mismatch → TAMPERED! Throw error ❌
+
+Wrong password → wrong key → wrong H → wrong tag → ERROR
+Corrupted data → tag mismatch → ERROR
+    </div>
+    <p>Is liye wrong password pe hum "Incorrect password or corrupted data" show karte hain — AES-GCM automatically detect karta hai!</p>
+  </div>
+
+  <div class="section">
+    <h3>Output size calculation:</h3>
+    <div class="formula-box">
+Ciphertext size = Plaintext size + 16 bytes (auth tag)
+
+Example:
+Message: "Hello World 🔐" = 15 bytes
+Ciphertext = 15 + 16 = 31 bytes
+
+Note: GCM stream mode hai — koi padding nahi lagti!
+(ECB/CBC modes mein padding lagti hai — GCM mein nahi)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAYLOAD ═══════════════════════ -->
+<div id="sec-payload" class="content-section">
+  <h2>📦 STGC Payload Format — Binary Structure</h2>
+
+  <div class="section">
+    <h3>Payload kyun structure kiya?</h3>
+    <div class="analogy">
+      <p class="text-sm">📮 <strong>Analogy:</strong> Ek parcel bhejte waqt sirf item andar nahi daalt — ek address label bhi lagaate ho, weight likhte ho, sender info likhte ho. Receiver yahi dekh ke jaanta hai ke parcel kis ka hai, kya hai, kaha kholna hai. STGC payload bilkul aisa hi ek structured "parcel" hai!</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Byte-by-byte structure:</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <tr>
+          <th>Bytes</th><th>Field</th><th>Size</th><th>Value</th><th>Purpose</th>
+        </tr>
+        <tr>
+          <td><span class="highlight">0 – 3</span></td>
+          <td>Magic Header</td><td>4 bytes</td>
+          <td><code>S T G C</code></td>
+          <td>Ye confirm karta hai ke ye StegoCrypt payload hai</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-blue">4</span></td>
+          <td>Version</td><td>1 byte</td>
+          <td><code>0x01</code></td>
+          <td>Future mein version 2 aaye to old images read ho sakein</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">5 – 20</span></td>
+          <td>Salt</td><td>16 bytes</td>
+          <td>Random bytes</td>
+          <td>scrypt key derivation ke liye — secret nahi, payload mein store hai</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">21 – 32</span></td>
+          <td>Nonce</td><td>12 bytes</td>
+          <td>Random bytes</td>
+          <td>AES-GCM decryption ke liye zaruri</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-yellow">33 – 36</span></td>
+          <td>Length</td><td>4 bytes</td>
+          <td>uint32 number</td>
+          <td>Ciphertext kitne bytes ka hai — extractor ko exactly utna hi padhna hai</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-red">37 – end</span></td>
+          <td>Ciphertext</td><td>N bytes</td>
+          <td>Encrypted data</td>
+          <td>Actual encrypted message + 16-byte auth tag</td>
+        </tr>
+      </table>
+    </div>
+    <div class="formula-box mt-3">
+Total Header Size = 4 + 1 + 16 + 12 + 4 = 37 bytes (FIXED)
+
+Total Payload = 37 (header) + N (ciphertext) bytes
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Length field — struct.pack kya hai?</h3>
+    <p>Computer ko ek number (jaise 1000) exactly 4 bytes mein store karna hota hai. <code>struct.pack('>I', 1000)</code> ye kaam karta hai:</p>
+    <div class="formula-box">
+1000 in binary = 00000000 00000000 00000011 11101000
+
+struct.pack('>I', 1000) → bytes: [0x00, 0x00, 0x03, 0xE8]
+
+'>' = Big-endian (bade byte pehle — network standard)
+'I' = Unsigned Integer (4 bytes)
+
+struct.unpack('>I', b'\x00\x00\x03\xE8') → (1000,)  # recover karein
+
+Maximum value = 2³² - 1 = 4,294,967,295 bytes ≈ 4 GB
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Delimiter kyun nahi? (Like ###END###)</h3>
+    <div class="vs-grid">
+      <div class="vs-bad">
+        <p class="text-sm font-bold text-red-300">❌ Delimiter approach</p>
+        <p class="text-xs mt-1">Agar encrypted data mein naturally "###END###" bytes aajayein? → False end detected! Ciphertext binary data hai — koi bhi byte sequence possible hai</p>
+      </div>
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">✅ Length-prefix approach</p>
+        <p class="text-xs mt-1">Pehle header se exact length parho → phir bilkul utne bytes parho → koi ambiguity nahi, koi false positive nahi</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Magic Header ka fayda:</h3>
+    <div class="formula-box">
+Extractor sab se pehle bytes[0:4] check karta hai:
+  == b'STGC' → Yes! StegoCrypt payload hai ✅
+  != b'STGC' → "No StegoCrypt payload detected" error ❌
+
+Is se:
+  - Plain image upload karo → "not a stego image" error
+  - Doosri app ki stego image upload karo → "not a stego image"  
+  - StegoCrypt image upload karo → proceed to decrypt ✅
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ LSB ═══════════════════════ -->
+<div id="sec-lsb" class="content-section">
+  <h2>🖼️ LSB Steganography — Pixel Level Hiding</h2>
+
+  <div class="section">
+    <h3>LSB kya hai? (Least Significant Bit)</h3>
+    <div class="analogy">
+      <p class="text-sm">🏠 <strong>Analogy:</strong> Ek number mein "significant" matlab "important". 214 mein "2" sabse important hai (hundreds place), "4" kam important (units place). Pixel value mein sabse akhri bit (units wali jagah) sabse "least significant" hai — isko badlo toh value sirf 1 se change hoti hai!</p>
+    </div>
+    <div class="formula-box">
+Pixel Red channel = 214
+
+Binary:
+Position: 7  6  5  4  3  2  1  0
+Bit:       1  1  0  1  0  1  1  0
+Value:   128 64 32 16  8  4  2  1
+
+Position 0 = LSB (Least Significant Bit) = value 1
+Change it: 214 → 215 (difference = 1 out of 255 = 0.4%)
+INVISIBLE to human eye!
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Embedding — Step by Step</h3>
+    <p>Humein secret bit "1" chhupana hai pixel R=214 mein:</p>
+
+    <div class="card">
+      <p class="text-sm font-bold mb-2">Original pixel R = 214:</p>
+      <div class="byte-row">
+        <span class="byte-label">214 =</span>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+      </div>
+
+      <p class="text-sm font-bold mt-3 mb-2">Step 1: AND with 0xFE (11111110) — clear the LSB:</p>
+      <div class="byte-row">
+        <span class="byte-label">214 AND<br>0xFE =</span>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b-mask">0</div>
+      </div>
+      <p class="text-xs mt-1">Result = 214 (LSB force kiya 0 pe)</p>
+
+      <p class="text-sm font-bold mt-3 mb-2">Step 2: OR with secret bit "1" — set the LSB:</p>
+      <div class="byte-row">
+        <span class="byte-label">214 OR<br>1 =</span>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b0">0</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b1">1</div>
+        <div class="bit-visual b-changed">1</div>
+      </div>
+      <p class="text-xs mt-1">Result = <strong>215</strong> — secret bit "1" chhup gaya! ✅</p>
+    </div>
+
+    <div class="formula-box mt-3">
+Formula:
+new_byte = (original_byte AND 0xFE) OR secret_bit
+
+0xFE = 11111110 (sirf LSB zero hai)
+AND  → saari bits same rakhta hai, sirf LSB zero karta hai
+OR   → secret bit (0 ya 1) LSB mein set karta hai
+
+Secret bit = 0: (214 AND 0xFE) OR 0 = 214 (same)
+Secret bit = 1: (214 AND 0xFE) OR 1 = 215 (+1 only)
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Extraction — Step by Step</h3>
+    <div class="formula-box">
+Stego pixel R = 215 → binary: 11010111
+
+Extract LSB: 215 AND 1 = 1  (secret bit recovered!)
+
+215 = 11010111
+  1 = 00000001
+AND = 00000001 = 1 ✅
+
+Another example:
+Stego pixel G = 89  → binary: 01011001
+Extract LSB: 89 AND 1 = 1 (secret bit = 1)
+
+Stego pixel B = 200 → binary: 11001000
+Extract LSB: 200 AND 1 = 0 (secret bit = 0)
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Ek letter kaise embed hota hai?</h3>
+    <p>Letter "A" = 65 = <code>01000001</code> (8 bits) → 8 pixels ke R channel mein 8 bits embed honge:</p>
+    <div class="formula-box">
+"A" = 01000001
+
+Pixel 1 R: embed bit 0 → force LSB = 0
+Pixel 2 R: embed bit 1 → force LSB = 1
+Pixel 3 R: embed bit 0 → force LSB = 0
+Pixel 4 R: embed bit 0 → force LSB = 0
+Pixel 5 R: embed bit 0 → force LSB = 0
+Pixel 6 R: embed bit 0 → force LSB = 0
+Pixel 7 R: embed bit 0 → force LSB = 0
+Pixel 8 R: embed bit 1 → force LSB = 1
+
+After 8 pixels → "A" recovered! ✅
+    </div>
+    <p class="text-xs">Ye sequence R,G,B,R,G,B... continue karta hai — RGB alternating order mein.</p>
+  </div>
+
+  <div class="section">
+    <h3>NumPy — Saare pixels ek saath (vectorized):</h3>
+    <div class="formula-box">
+# Python loop (SLOW — millions of pixels ke liye):
+for i in range(len(bits)):
+    pixel[i] = (pixel[i] & 0xFE) | bits[i]  # slow!
+
+# NumPy vectorized (FAST — sab ek saath):
+flat_rgb[:n] = (flat_rgb[:n] & 0xFE) | bits  # fast!
+
+# NumPy ek line mein poori array pe operation karta hai
+# SIMD (Single Instruction Multiple Data) use karta hai
+# 100× faster than Python loops
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Alpha channel kyun nahi use karte?</h3>
+    <p>RGBA images mein 4th channel Alpha = <strong>transparency</strong>. Alpha 0 = fully transparent, Alpha 255 = fully opaque. Iska LSB change karo → pixel thoda transparent ho jaata hai → visually noticeable! Is liye hum sirf R, G, B use karte hain.</p>
+  </div>
+
+  <div class="section">
+    <h3>PNG vs JPEG — kyun PNG zaroori hai?</h3>
+    <div class="vs-grid">
+      <div class="vs-bad">
+        <p class="text-sm font-bold text-red-300">❌ JPEG (Lossy)</p>
+        <p class="text-xs mt-1">Ye image save karte waqt pixels CHANGE karta hai! R=215 → R=217 ya R=213 ho sakta hai. LSB data DESTROY ho jaata hai!</p>
+      </div>
+      <div class="vs-good">
+        <p class="text-sm font-bold text-green-300">✅ PNG (Lossless)</p>
+        <p class="text-xs mt-1">PNG exactly same pixel values save karta hai. R=215 → R=215. LSB data preserved! ✅</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CAPACITY ═══════════════════════ -->
+<div id="sec-capacity" class="content-section">
+  <h2>📐 Capacity Calculation — Kitna Data Fit Ho Sakta Hai?</h2>
+
+  <div class="section">
+    <h3>Basic Formula:</h3>
+    <div class="formula-box">
+Har pixel = 3 channels (R, G, B)
+Har channel = 1 bit hide kar sakta hai (LSB)
+So: har pixel = 3 bits
+
+Capacity (bits)  = Width × Height × 3
+Capacity (bytes) = (Width × Height × 3) ÷ 8
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Examples:</h3>
+    <table>
+      <tr><th>Image Size</th><th>Pixels</th><th>Capacity (bytes)</th><th>Capacity (KB)</th></tr>
+      <tr><td>100 × 100</td><td>10,000</td><td>3,750</td><td>3.66 KB</td></tr>
+      <tr><td>500 × 500</td><td>250,000</td><td>93,750</td><td>91.5 KB</td></tr>
+      <tr><td>1920 × 1080</td><td>2,073,600</td><td>777,600</td><td>759 KB</td></tr>
+      <tr><td>3840 × 2160 (4K)</td><td>8,294,400</td><td>3,110,400</td><td>3,037 KB</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Capacity Check (Overflow Prevention):</h3>
+    <div class="formula-box">
+payload_bits = len(payload_bytes) × 8
+cap_bits     = width × height × 3
+
+IF payload_bits > cap_bits:
+    raise Error("Image too small!")
+
+Example:
+Message "Hello" = 5 chars, UTF-8 = 5 bytes
+AES encrypt: 5 + 16 (tag) = 21 bytes ciphertext
+STGC header: 37 bytes
+Total payload: 37 + 21 = 58 bytes = 464 bits
+
+Image 10×10 = 300 bits → TOO SMALL ❌
+Image 20×20 = 1200 bits → FITS ✅ (even 100×100 is overkill)
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Live Calculator:</h3>
+    <div class="flex gap-3 flex-wrap">
+      <div>
+        <label class="text-xs text-[var(--muted-foreground)]">Width (px)</label><br>
+        <input id="cw" type="number" value="800" oninput="calcCap()" class="mt-1 px-2 py-1 rounded bg-[var(--card)] border border-[var(--border)] text-sm w-24">
+      </div>
+      <div>
+        <label class="text-xs text-[var(--muted-foreground)]">Height (px)</label><br>
+        <input id="ch" type="number" value="600" oninput="calcCap()" class="mt-1 px-2 py-1 rounded bg-[var(--card)] border border-[var(--border)] text-sm w-24">
+      </div>
+      <div>
+        <label class="text-xs text-[var(--muted-foreground)]">Message (bytes)</label><br>
+        <input id="cm" type="number" value="100" oninput="calcCap()" class="mt-1 px-2 py-1 rounded bg-[var(--card)] border border-[var(--border)] text-sm w-28">
+      </div>
+    </div>
+    <div id="cap-out" class="formula-box text-sm mt-3"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PSNR ═══════════════════════ -->
+<div id="sec-psnr" class="content-section">
+  <h2>📊 PSNR — Image Quality Measure</h2>
+
+  <div class="section">
+    <h3>PSNR kya hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">📻 <strong>Analogy:</strong> Radio signal mein "signal-to-noise ratio" hota hai — useful signal kitna zyada hai noise se. Image mein: original image = useful signal, stego changes = noise. PSNR zyada = noise kam = better quality.</p>
+    </div>
+    <p>PSNR <strong>original aur stego image ke درمیان difference</strong> naapti hai. Higher value = better (less distortion).</p>
+  </div>
+
+  <div class="section">
+    <h3>Step 1 — MSE (Mean Squared Error):</h3>
+    <div class="formula-box">
+MSE = average of (original - stego)² for every pixel channel
+
+Har pixel ke liye:
+  Original R = 214, Stego R = 215
+  Difference = 215 - 214 = 1
+  Squared    = 1² = 1
+
+Agar 1000 pixels mein 500 changed (by 1) and 500 unchanged:
+  MSE = (500 × 1² + 500 × 0²) / 1000 = 500/1000 = 0.5
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Step 2 — PSNR formula:</h3>
+    <div class="formula-box">
+PSNR = 10 × log₁₀(MAX² / MSE)
+
+MAX = 255 (maximum pixel value for 8-bit image)
+
+log₁₀ = logarithm base 10
+  log₁₀(1)     = 0
+  log₁₀(10)    = 1
+  log₁₀(100)   = 2
+  log₁₀(1000)  = 3
+  log₁₀(10000) = 4
+
+Example with MSE = 0.5:
+PSNR = 10 × log₁₀(255² / 0.5)
+     = 10 × log₁₀(65025 / 0.5)
+     = 10 × log₁₀(130050)
+     = 10 × 5.114
+     = 51.14 dB ✅ (Excellent quality!)
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>LSB mein PSNR itna high kyun hota hai?</h3>
+    <div class="formula-box">
+LSB change = maximum 1 per channel
+
+MSE calculation:
+  If we change ALL pixels by 1:
+  MSE = 1.0 (maximum possible for LSB)
+  PSNR = 10 × log₁₀(255²/1.0) = 10 × log₁₀(65025) = 48.1 dB
+
+  Realistic (only some pixels changed):
+  MSE ≈ 0.05 to 0.3
+  PSNR ≈ 53 to 61 dB  ← StegoCrypt typical range
+
+61 dB matlab: difference itna chhota hai ke koi bhi nahi dekh sakta!
+    </div>
+    <div class="mt-3">
+      <p class="text-sm font-bold mb-2">PSNR Scale:</p>
+      <div class="space-y-2">
+        <div><div class="flex justify-between text-xs mb-1"><span>Below 30 dB — Visible distortion</span><span>Poor</span></div><div class="progress-bar"><div class="progress-fill" style="width:30%;background:#ef4444"></div></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><span>30–40 dB — Acceptable</span><span>OK</span></div><div class="progress-bar"><div class="progress-fill" style="width:55%;background:#f59e0b"></div></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><span>40–50 dB — Good</span><span>Good</span></div><div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><span>50–60 dB — Excellent ← StegoCrypt</span><span>Excellent</span></div><div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><span>∞ dB — Identical images</span><span>Perfect</span></div><div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SSIM ═══════════════════════ -->
+<div id="sec-ssim" class="content-section">
+  <h2>📈 SSIM — Structural Similarity</h2>
+
+  <div class="section">
+    <h3>PSNR se SSIM kaise alag hai?</h3>
+    <div class="analogy">
+      <p class="text-sm">👁️ <strong>Analogy:</strong> PSNR ek lab instrument ki tarah hai jo sirf numbers measure karta hai. SSIM ek human eye ki tarah hai jo structure, texture, aur brightness ko holistically dekhta hai — jaise hum actually images judge karte hain.</p>
+    </div>
+    <p>SSIM <strong>teen cheezein</strong> compare karta hai:</p>
+    <div class="step-row"><div class="step-num">L</div><div><strong>Luminance (Roshan/Andhere):</strong> Average brightness same hai kya?</div></div>
+    <div class="step-row"><div class="step-num">C</div><div><strong>Contrast (Tezaab/Mulaayam):</strong> Pixel variation pattern same hai kya?</div></div>
+    <div class="step-row"><div class="step-num">S</div><div><strong>Structure (Shapes/Edges):</strong> Image ka structure (edges, textures) same hai kya?</div></div>
+  </div>
+
+  <div class="section">
+    <h3>SSIM Formula (simplified):</h3>
+    <div class="formula-box">
+SSIM(x, y) = L(x,y) × C(x,y) × S(x,y)
+
+Where (in a small window/patch of pixels):
+
+μₓ = mean of patch x (average pixel value)
+μᵧ = mean of patch y
+σₓ = standard deviation of x (how spread out values are)
+σᵧ = standard deviation of y
+σₓᵧ = covariance of x,y (how they vary together)
+
+L(x,y) = (2μₓμᵧ + C₁) / (μₓ² + μᵧ² + C₁)
+C(x,y) = (2σₓσᵧ + C₂) / (σₓ² + σᵧ² + C₂)  
+S(x,y) = (σₓᵧ + C₃) / (σₓσᵧ + C₃)
+
+C₁, C₂, C₃ = small constants to prevent division by zero
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>LSB mein SSIM itna high kyun?</h3>
+    <div class="formula-box">
+LSB change = only 1 per channel
+
+Mean (μ) almost same raha → L ≈ 1.0
+Standard deviation almost same → C ≈ 1.0
+Covariance almost same → S ≈ 1.0
+
+SSIM = L × C × S ≈ 1.0 × 1.0 × 1.0 ≈ 0.9999
+
+StegoCrypt typical SSIM: 0.9998 to 0.9999
+    </div>
+    <table class="mt-3">
+      <tr><th>SSIM Value</th><th>Matlab</th></tr>
+      <tr><td>1.0</td><td>Bilkul identical images</td></tr>
+      <tr><td style="color:#86efac">0.999+</td><td style="color:#86efac">✅ StegoCrypt — near-perfect</td></tr>
+      <tr><td>0.9–0.999</td><td>Bahut similar — barely noticeable difference</td></tr>
+      <tr><td>0.7–0.9</td><td>Similar but visibly different</td></tr>
+      <tr><td>&lt;0.5</td><td>Very different</td></tr>
+      <tr><td>-1.0</td><td>Opposite (negative)</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Window-based computation:</h3>
+    <p>SSIM poori image ek baar mein nahi napti. Ye ek <strong>chota window (e.g. 7×7 pixels)</strong> slide karta hai poori image pe, har jagah SSIM calculate karta hai, phir average nikalta hai. Ye human vision system ko model karta hai — hum bhi locally dekhte hain!</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ FULL FLOW ═══════════════════════ -->
+<div id="sec-full" class="content-section">
+  <h2>🔄 Complete Flow — Ek Saath Sab Kuch</h2>
+  <p class="mb-4">Ab jab sab concepts clear hain, ye dekho ke yeh sab milke kaise kaam karte hain "This is my secret message 🔐" example ke saath:</p>
+
+  <div class="section">
+    <h3>🔐 ENCRYPT &amp; HIDE side:</h3>
+
+    <div class="step-row"><div class="step-num">1</div><div>
+      <strong>Input:</strong><br>
+      <span class="text-sm">Message: <code class="text-[var(--primary)]">"This is my secret message 🔐"</code><br>
+      UTF-8 encode: 30 bytes (emoji = 4 bytes)<br>
+      Password: <code class="text-[var(--primary)]">"StrongPassword123!"</code> (18 chars)</span>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">2</div><div>
+      <strong>Salt generate:</strong><br>
+      <span class="text-sm"><code>os.urandom(16)</code> → [0xA3, 0x7F, 0xC2, 0x11, ...] (16 completely random bytes)<br>
+      Ye salt payload mein save hoti hai — secret nahi</span>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">3</div><div>
+      <strong>scrypt key derive:</strong><br>
+      <div class="formula-box text-xs">scrypt("StrongPassword123!", salt, N=16384, r=8, p=1, len=32)
+→ Key = [0x8E, 0x3C, 0xF1, 0x44, ...] (32 bytes = 256 bits)
+Takes ~100ms + 16MB RAM</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">4</div><div>
+      <strong>Nonce generate:</strong><br>
+      <span class="text-sm"><code>os.urandom(12)</code> → [0x4D, 0x9A, 0x01, ...] (12 random bytes)</span>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">5</div><div>
+      <strong>AES-256-GCM encrypt:</strong><br>
+      <div class="formula-box text-xs">AES_GCM.encrypt(key=32bytes, nonce=12bytes, plaintext=30bytes)
+→ Ciphertext = 30 bytes + 16 bytes (auth tag) = 46 bytes
+(Completely random-looking encrypted data)</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">6</div><div>
+      <strong>Build STGC payload:</strong><br>
+      <div class="formula-box text-xs">b'STGC'         = 4 bytes  [magic]
+b'\x01'        = 1 byte   [version]
+salt           = 16 bytes [random]
+nonce          = 12 bytes [random]
+struct.pack('>I', 46) = 4 bytes [length]
+ciphertext     = 46 bytes
+─────────────────────────────
+Total          = 83 bytes</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">7</div><div>
+      <strong>Convert to bits:</strong><br>
+      <span class="text-sm">83 bytes × 8 = <strong>664 bits</strong> to embed</span>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">8</div><div>
+      <strong>LSB embed in 400×400 image:</strong><br>
+      <div class="formula-box text-xs">Capacity = 400 × 400 × 3 = 480,000 bits
+Payload  = 664 bits
+Capacity used = 664/480,000 = 0.14% ← almost nothing!
+
+For each of 664 bits:
+  channel_value = (channel_value AND 0xFE) OR payload_bit
+Maximum change per pixel: ±1</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">9</div><div>
+      <strong>Save as PNG:</strong><br>
+      <span class="text-sm">Exactly same pixel values preserved → LSB data safe ✅<br>
+      PSNR ≈ 57 dB, SSIM ≈ 0.9999</span>
+    </div></div>
+  </div>
+
+  <div class="section">
+    <h3>🔓 EXTRACT &amp; DECRYPT side:</h3>
+
+    <div class="step-row"><div class="step-num">1</div><div>
+      <strong>Read first 37×8=296 LSBs → header:</strong><br>
+      <span class="text-sm">bytes[0:4] == b'STGC' → ✅ StegoCrypt payload confirmed<br>
+      bytes[4] == 0x01 → ✅ version 1<br>
+      bytes[5:21] → salt (16 bytes extracted)<br>
+      bytes[21:33] → nonce (12 bytes)<br>
+      bytes[33:37] → length = 46</span>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">2</div><div>
+      <strong>Read exactly 46×8=368 more LSBs → ciphertext</strong>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">3</div><div>
+      <strong>scrypt with password + extracted salt:</strong><br>
+      <div class="formula-box text-xs">scrypt("StrongPassword123!", extracted_salt, ...) → same key as before ✅
+(Salt stored in payload → receiver can derive same key!)</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">4</div><div>
+      <strong>AES-256-GCM decrypt:</strong><br>
+      <div class="formula-box text-xs">AES_GCM.decrypt(key, nonce, ciphertext)
+→ Verifies auth tag (16 bytes) → PASS ✅
+→ Decrypts → 30 bytes plaintext
+→ UTF-8 decode → "This is my secret message 🔐" ✅</div>
+    </div></div>
+
+    <div class="step-row"><div class="step-num">❌</div><div>
+      <strong>Wrong password "WrongPassword123" — kya hota hai?</strong><br>
+      <div class="formula-box text-xs">scrypt("WrongPassword123", salt) → different key [0xC4, 0x12, ...]
+AES_GCM.decrypt(wrong_key, nonce, ciphertext) 
+→ auth tag mismatch detected
+→ InvalidTag exception
+→ User sees: "Incorrect password or corrupted hidden data." ✅
+→ No crash, no garbage output</div>
+    </div></div>
+  </div>
+
+  <div class="card" style="border-color:#166534; background:#052e16;">
+    <p class="font-bold text-green-300 mb-2">✅ Security Summary</p>
+    <p class="text-sm"><strong>Even if attacker:</strong></p>
+    <ul class="text-sm mt-2 space-y-1">
+      <li>• Stego image haath lag jaaye → andar encrypted data hai, parhna impossible without password</li>
+      <li>• STGC format jaanta ho → 46 bytes ciphertext milega but decrypt nahi hoga</li>
+      <li>• 1 billion passwords/second try kare → scrypt ki wajah se actually 10/second max → billions of years</li>
+      <li>• Stego image mein koi bit change kare → AES auth tag fail → clean error</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  function show(name) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function calcCap() {
+    const w = parseInt(document.getElementById('cw').value) || 0;
+    const h = parseInt(document.getElementById('ch').value) || 0;
+    const m = parseInt(document.getElementById('cm').value) || 0;
+    const capBits = w * h * 3;
+    const capBytes = Math.floor(capBits / 8);
+    const payload = m + 16 + 37; // msg + GCM tag + header
+    const payBits = payload * 8;
+    const used = capBytes > 0 ? ((payload / capBytes) * 100).toFixed(2) : '∞';
+    const fits = payBits <= capBits;
+    document.getElementById('cap-out').innerHTML =
+      `Image ${w}×${h}:\n  Pixels = ${(w*h).toLocaleString()}\n  Capacity = ${capBits.toLocaleString()} bits = ${capBytes.toLocaleString()} bytes = ${(capBytes/1024).toFixed(1)} KB\n\nPayload:\n  Message = ${m} bytes\n  + AES tag = 16 bytes\n  + STGC header = 37 bytes\n  = Total ${payload} bytes = ${payBits.toLocaleString()} bits\n\nCapacity used: ${used}%\n\nResult: ${fits ? '✅ FITS! Image large enough.' : '❌ TOO LARGE — use bigger image or shorter message'}`;
+  }
+  calcCap();
+</script>
+</body>
+</html>
