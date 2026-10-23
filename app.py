@@ -12,6 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import streamlit as st
 from PIL import Image
+import numpy as np
 
 from core.crypto import (
     validate_password,
