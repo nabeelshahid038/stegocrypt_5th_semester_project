@@ -557,7 +557,7 @@ with tab_detect:
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab_help:
     st.header("ℹ️ Architecture & Scientific Principles")
-    st.markdown("""
+    st.markdown(r"""
     ### 1. High-Level Cryptographic Architecture
     StegoCrypt Pro combines military-grade authenticated encryption with spatial-domain steganography:
     
